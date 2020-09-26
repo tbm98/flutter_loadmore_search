@@ -46,16 +46,20 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   ScrollController _controller = ScrollController();
+  int oldLength = 0;
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(() {
+    _controller.addListener(() async {
       // print('pixel is ${_controller.position.pixels}');
       // print('max is ${_controller.position.maxScrollExtent}');
       if (_controller.position.pixels >
           _controller.position.maxScrollExtent * 0.8) {
-        context.read(postsProvider).loadMorePost();
+        if (oldLength == context.read(postsProvider.state).posts.length) {
+          // make sure ListView has newest data after previous loadMore
+          context.read(postsProvider).loadMorePost();
+        }
       }
     });
   }
@@ -65,7 +69,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: TextFormField(
-          decoration: InputDecoration(hintText: 'search'),
+          decoration: InputDecoration(
+              hintText: 'Enter to search!',
+              hintStyle: TextStyle(color: Colors.yellow)),
           onChanged: (newValue) {
             context.read(keyProvider).state = newValue;
           },
@@ -78,9 +84,12 @@ class _MyHomePageState extends State<MyHomePage> {
           final isLoading = watch(postsProvider.state).isLoading;
           final posts = watch(postSearchProvider).state;
 
-          // trường hợp init data hoặc lỗi
+          // sync oldLength with post.length to make sure ListView has newest
+          // data, so loadMore will work correctly
+          oldLength = posts?.length ?? 0;
+          // init data or error
           if (posts == null) {
-            // trường hợp lỗi
+            // error case
             if (isLoading == false) {
               return Center(
                 child: Text('error'),
@@ -96,15 +105,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 controller: _controller,
                 itemCount: posts.length + 1,
                 itemBuilder: (ctx, index) {
-                  // phần tử cuối cùng (là progress, error hoặc không là gì nếu load more đã hết)
+                  // last element (progress bar, error or 'Done!' if reached to the last element)
                   if (index == posts.length) {
-                    // trường hợp load more lỗi thì hiện cái này
+                    // load more and get error
                     if (isLoadMoreError) {
                       return Center(
                         child: Text('Error'),
                       );
                     }
-                    // trường hợp load more nhưng không còn ptu nào
+                    // load more but reached to the last element
                     if (isLoadMoreDone) {
                       return Center(
                         child: Text('Done!'),

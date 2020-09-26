@@ -4,23 +4,30 @@ import 'package:flutter_loadmore_search/http_client.dart';
 import 'package:flutter_loadmore_search/post.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'post_provider.freezed.dart';
+
+@freezed
+abstract class PostState with _$PostState {
+  const factory PostState({
+    @Default(1) int page,
+    List<Post> posts,
+    @Default(true) bool isLoading,
+    @Default(false) bool isLoadMoreError,
+    @Default(false) bool isLoadMoreDone,
+  }) = _PostState;
+
+  const PostState._();
+}
+
 final postsProvider = StateNotifierProvider<PostNotifier>((ref) {
   return PostNotifier();
 });
 
-class PostState {
-  final int page;
-  final bool isLoading;
-  final bool isLoadMoreDone;
-  final bool isLoadMoreError;
-  final List<Post> posts;
-
-  PostState(this.page, this.isLoading, this.isLoadMoreError,
-      this.isLoadMoreDone, this.posts);
-}
-
 class PostNotifier extends StateNotifier<PostState> {
-  PostNotifier() : super(PostState(1, true, false, false, null)) {
+  PostNotifier() : super(PostState()) {
     _initPosts();
   }
 
@@ -29,31 +36,45 @@ class PostNotifier extends StateNotifier<PostState> {
     final posts = await getPosts(page);
 
     if (posts == null) {
-      state = PostState(page, false, false, false, posts);
+      state = state.copyWith(page: page, isLoading: false);
       return;
     }
 
     print('get post is ${posts.length}');
-    state = PostState(page, false, false, false, posts);
+    state = state.copyWith(page: page, isLoading: false, posts: posts);
   }
 
   loadMorePost() async {
+    print('request loading ${state.isLoading} at ${state.page + 1}');
     if (state.isLoading) {
       return;
     }
-    state = PostState(state.page, true, false, false, state.posts);
+    state = state.copyWith(
+        isLoading: true, isLoadMoreDone: false, isLoadMoreError: false);
 
     final posts = await getPosts(state.page + 1);
 
     if (posts == null) {
       // error
-      state = PostState(state.page, false, true, false, state.posts);
+      state = state.copyWith(isLoadMoreError: true, isLoading: false);
       return;
     }
 
     print('load more post is ${posts.length} at page ${state.page + 1}');
-    state = PostState(state.page + 1, false, false, posts.length == 0,
-        [...state.posts, ...posts]);
+    if (posts.isNotEmpty) {
+      // if load more return a list not empty, => increment page
+      state = state.copyWith(
+          page: state.page + 1,
+          isLoading: false,
+          isLoadMoreDone: posts.isEmpty,
+          posts: [...state.posts, ...posts]);
+    } else {
+      // not increment page
+      state = state.copyWith(
+        isLoading: false,
+        isLoadMoreDone: posts.isEmpty,
+      );
+    }
   }
 
   Future<void> refresh() async {
