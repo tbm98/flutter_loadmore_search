@@ -45,10 +45,15 @@ class PostNotifier extends StateNotifier<PostState> {
   }
 
   loadMorePost() async {
-    print('request loading ${state.isLoading} at ${state.page + 1}');
+    StringBuffer bf = StringBuffer();
+
+    bf.write('try to request loading ${state.isLoading} at ${state.page + 1}');
     if (state.isLoading) {
+      bf.write(' fail');
       return;
     }
+    bf.write(' success');
+    print(bf.toString());
     state = state.copyWith(
         isLoading: true, isLoadMoreDone: false, isLoadMoreError: false);
 
@@ -60,7 +65,7 @@ class PostNotifier extends StateNotifier<PostState> {
       return;
     }
 
-    print('load more post is ${posts.length} at page ${state.page + 1}');
+    print('load more ${posts.length} posts at page ${state.page + 1}');
     if (posts.isNotEmpty) {
       // if load more return a list not empty, => increment page
       state = state.copyWith(

@@ -4,7 +4,7 @@ import 'package:flutter_loadmore_search/post.dart';
 import 'package:http/http.dart' as http;
 
 Future<List<Post>> getPosts(int page) async {
-  print('loading page $page');
+  print('httpClient loading page $page');
 
   // fake loading error at page = 1
   // if (page == 1) {

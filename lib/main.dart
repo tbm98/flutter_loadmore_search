@@ -55,7 +55,8 @@ class _MyHomePageState extends State<MyHomePage> {
       // print('pixel is ${_controller.position.pixels}');
       // print('max is ${_controller.position.maxScrollExtent}');
       if (_controller.position.pixels >
-          _controller.position.maxScrollExtent * 0.8) {
+          _controller.position.maxScrollExtent -
+              MediaQuery.of(context).size.height) {
         if (oldLength == context.read(postsProvider.state).posts.length) {
           // make sure ListView has newest data after previous loadMore
           context.read(postsProvider).loadMorePost();
