@@ -1,4 +1,5 @@
 // Flutter imports:
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -50,6 +51,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  // Create the initilization Future outside of `build`:
+  final Future<FirebaseApp> _initialization = Firebase.initializeApp();
   ScrollController _controller = ScrollController();
   int oldLength = 0;
 
@@ -72,70 +75,89 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: TextFormField(
-          decoration: InputDecoration(
-              hintText: 'Enter to search!',
-              hintStyle: TextStyle(color: Colors.yellow)),
-          onChanged: (newValue) {
-            context.read(keyProvider).state = newValue;
-          },
-        ),
-      ),
-      body: Consumer(
-        builder: (ctx, watch, child) {
-          final isLoadMoreError = watch(postsProvider.state).isLoadMoreError;
-          final isLoadMoreDone = watch(postsProvider.state).isLoadMoreDone;
-          final isLoading = watch(postsProvider.state).isLoading;
-          final posts = watch(postSearchProvider).state;
+    return FutureBuilder(
+      // Initialize FlutterFire:
+      future: _initialization,
+      builder: (context, snapshot) {
+        // Check for errors
+        if (snapshot.hasError) {
+          return Text('Something went wrong!');
+        }
 
-          // sync oldLength with post.length to make sure ListView has newest
-          // data, so loadMore will work correctly
-          oldLength = posts?.length ?? 0;
-          // init data or error
-          if (posts == null) {
-            // error case
-            if (isLoading == false) {
-              return Center(
-                child: Text('error'),
-              );
-            }
-            return const _Loading();
-          }
-          return RefreshIndicator(
-            onRefresh: () {
-              return context.read(postsProvider).refresh();
-            },
-            child: ListView.builder(
-                controller: _controller,
-                itemCount: posts.length + 1,
-                itemBuilder: (ctx, index) {
-                  // last element (progress bar, error or 'Done!' if reached to the last element)
-                  if (index == posts.length) {
-                    // load more and get error
-                    if (isLoadMoreError) {
-                      return Center(
-                        child: Text('Error'),
-                      );
-                    }
-                    // load more but reached to the last element
-                    if (isLoadMoreDone) {
-                      return Center(
-                        child: Text('Done!'),
-                      );
-                    }
-                    return LinearProgressIndicator();
+        // Once complete, show your application
+        if (snapshot.connectionState == ConnectionState.done) {
+          return Scaffold(
+            appBar: AppBar(
+              title: TextFormField(
+                decoration: InputDecoration(
+                    hintText: 'Enter to search!',
+                    hintStyle: TextStyle(color: Colors.yellow)),
+                onChanged: (newValue) {
+                  context.read(keyProvider).state = newValue;
+                },
+              ),
+            ),
+            body: Consumer(
+              builder: (ctx, watch, child) {
+                final isLoadMoreError =
+                    watch(postsProvider.state).isLoadMoreError;
+                final isLoadMoreDone =
+                    watch(postsProvider.state).isLoadMoreDone;
+                final isLoading = watch(postsProvider.state).isLoading;
+                final posts = watch(postSearchProvider).state;
+
+                // sync oldLength with post.length to make sure ListView has newest
+                // data, so loadMore will work correctly
+                oldLength = posts?.length ?? 0;
+                // init data or error
+                if (posts == null) {
+                  // error case
+                  if (isLoading == false) {
+                    return Center(
+                      child: Text('error'),
+                    );
                   }
-                  return ListTile(
-                    title: Text(posts[index].title),
-                    subtitle: Text(posts[index].body),
-                    trailing: Text(posts[index].id.toString()),
-                  );
-                }),
+                  return const _Loading();
+                }
+                return RefreshIndicator(
+                  onRefresh: () {
+                    return context.read(postsProvider).refresh();
+                  },
+                  child: ListView.builder(
+                      controller: _controller,
+                      itemCount: posts.length + 1,
+                      itemBuilder: (ctx, index) {
+                        // last element (progress bar, error or 'Done!' if reached to the last element)
+                        if (index == posts.length) {
+                          // load more and get error
+                          if (isLoadMoreError) {
+                            return Center(
+                              child: Text('Error'),
+                            );
+                          }
+                          // load more but reached to the last element
+                          if (isLoadMoreDone) {
+                            return Center(
+                              child: Text('Done!'),
+                            );
+                          }
+                          return LinearProgressIndicator();
+                        }
+                        return ListTile(
+                          title: Text(posts[index].title),
+                          subtitle: Text(posts[index].body),
+                          trailing: Text(posts[index].id.toString()),
+                        );
+                      }),
+                );
+              },
+            ),
           );
-        },
-      ),
+        }
+
+        // Otherwise, show something whilst waiting for initialization to complete
+        return Text('Loading...');
+      },
     );
   }
 }
