@@ -1,0 +1,31 @@
+on: [pull_request,push]
+name: Check format & Unit test
+jobs:
+  setup:
+    name: Check format & Unit test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup flutter
+        uses: takuyaohashi/setup-flutter@v1
+        with:
+          flutter-version: 'latest'
+          channel: 'beta'
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Check format code
+        run: |
+          flutter format --set-exit-if-changed --line-length 80 lib test
+          flutter pub run import_sorter:main --exit-if-changed
+      - name: Unit test
+        run: flutter test --coverage
+
+#      - name: Upload coverage to Codecov
+#        uses: codecov/codecov-action@v1
+#        with:
+#          token: ${{ secrets.CODECOV_TOKEN }}
+#          file: coverage/lcov.info

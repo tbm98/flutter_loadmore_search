@@ -31,12 +31,14 @@ dependencies:
   freezed_annotation: ^0.12.0
   http: ^0.12.2
   flutter_riverpod: ^0.11.0
+  firebase_core: ^0.5.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner:
   freezed:
+  import_sorter: ^4.2.1
 
 
 # For information on the generic Dart part of this file, see the

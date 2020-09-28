@@ -1,11 +1,16 @@
+// Dart imports:
 import 'dart:async';
 
+// Flutter imports:
+import 'package:flutter/foundation.dart';
+
+// Package imports:
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+// Project imports:
 import 'package:flutter_loadmore_search/http_client.dart';
 import 'package:flutter_loadmore_search/post.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:flutter/foundation.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'post_provider.freezed.dart';
 

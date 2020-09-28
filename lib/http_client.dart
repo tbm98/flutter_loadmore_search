@@ -1,7 +1,11 @@
+// Dart imports:
 import 'dart:convert';
 
-import 'package:flutter_loadmore_search/post.dart';
+// Package imports:
 import 'package:http/http.dart' as http;
+
+// Project imports:
+import 'package:flutter_loadmore_search/post.dart';
 
 Future<List<Post>> getPosts(int page) async {
   print('httpClient loading page $page');
