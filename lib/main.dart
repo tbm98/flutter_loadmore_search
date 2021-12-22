@@ -8,8 +8,8 @@ final keyProvider = StateProvider<String>((ref) {
 });
 
 final postSearchProvider = StateProvider<List<Post>>((ref) {
-  final postState = ref.watch(postsProvider.state);
-  final key = ref.watch(keyProvider).state;
+  final postState = ref.watch(postsProvider);
+  final key = ref.watch(keyProvider);
 
   return postState.posts
       ?.where((element) =>
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends ConsumerStatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
   final String title;
 
@@ -44,7 +44,7 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends ConsumerState<MyHomePage> {
   ScrollController _controller = ScrollController();
   int oldLength = 0;
 
@@ -57,9 +57,9 @@ class _MyHomePageState extends State<MyHomePage> {
       if (_controller.position.pixels >
           _controller.position.maxScrollExtent -
               MediaQuery.of(context).size.height) {
-        if (oldLength == context.read(postsProvider.state).posts.length) {
+        if (oldLength == ref.read(postsProvider).posts.length) {
           // make sure ListView has newest data after previous loadMore
-          context.read(postsProvider).loadMorePost();
+          ref.read(postsProvider.notifier).loadMorePost();
         }
       }
     });
@@ -74,16 +74,16 @@ class _MyHomePageState extends State<MyHomePage> {
               hintText: 'Enter to search!',
               hintStyle: TextStyle(color: Colors.yellow)),
           onChanged: (newValue) {
-            context.read(keyProvider).state = newValue;
+            ref.read(keyProvider.notifier).state = newValue;
           },
         ),
       ),
       body: Consumer(
         builder: (ctx, watch, child) {
-          final isLoadMoreError = watch(postsProvider.state).isLoadMoreError;
-          final isLoadMoreDone = watch(postsProvider.state).isLoadMoreDone;
-          final isLoading = watch(postsProvider.state).isLoading;
-          final posts = watch(postSearchProvider).state;
+          final isLoadMoreError = ref.watch(postsProvider).isLoadMoreError;
+          final isLoadMoreDone = ref.watch(postsProvider).isLoadMoreDone;
+          final isLoading = ref.watch(postsProvider).isLoading;
+          final posts = ref.watch(postSearchProvider.notifier).state;
 
           // sync oldLength with post.length to make sure ListView has newest
           // data, so loadMore will work correctly
@@ -100,9 +100,10 @@ class _MyHomePageState extends State<MyHomePage> {
           }
           return RefreshIndicator(
             onRefresh: () {
-              return context.read(postsProvider).refresh();
+              return ref.read(postsProvider.notifier).refresh();
             },
             child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 controller: _controller,
                 itemCount: posts.length + 1,
                 itemBuilder: (ctx, index) {
@@ -117,7 +118,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     // load more but reached to the last element
                     if (isLoadMoreDone) {
                       return Center(
-                        child: Text('Done!'),
+                        child: Text(
+                          'Done!',
+                          style: TextStyle(color: Colors.green, fontSize: 20),
+                        ),
                       );
                     }
                     return LinearProgressIndicator();
