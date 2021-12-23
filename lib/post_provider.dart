@@ -22,7 +22,7 @@ abstract class PostState with _$PostState {
   const PostState._();
 }
 
-final postsProvider = StateNotifierProvider<PostNotifier>((ref) {
+final postsProvider = StateNotifierProvider<PostNotifier, PostState>((ref) {
   return PostNotifier();
 });
 
